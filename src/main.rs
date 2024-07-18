@@ -5,6 +5,7 @@ use std::thread;
 use rand::prelude::*;
 use clap::{Command, Arg};
 use rand::thread_rng;
+use indicatif::{ProgressBar, ProgressStyle};
 
 const DICKS: &[&str] = &[
     "8=D ", "8=D~ ", "8=D~~ ", "8=D~~~ ", "8==D ", "8==D~ ", "8==D~~ ", "8==D~~~ ", "8===D ", "8===D~ ", "8===D~~ ", "8===D~~~ ", "8====D ", "8====D~ ", "8====D~~ ", "8====D~~~ ", "8=====D ", "8=====D~ ", "8=====D~~ ", "8=====D~~~ ", "8======D ", "8======D~ ", "8======D~~ ", "8======D~~~ ", "8=======D ", "8=======D~ ", "8=======D~~ ", "8=======D~~~ ", "8========D ", "8========D~ ", "8========D~~ ", "8========D~~~ ", "8=========D ", "8=========D~ ", "8=========D~~ ", "8=========D~~~ ", "8==========D ", "8==========D~ ", "8==========D~~ ", "8==========D~~~ ", "8===========D ", "8===========D~ ", "8===========D~~ ", "8===========D~~~ ", "8============D ", "8============D~ ", "8============D~~ ", "8============D~~~ ", "8#=D ", "8#=D~ ", "8#=D~~ ", "8#=D~~~ ", "8#==D ", "8#==D~ ", "8#==D~~ ", "8#==D~~~ ", "8#===D ", "8#===D~ ", "8#===D~~ ", "8#===D~~~ ", "8#====D ", "8#====D~ ", "8#====D~~ ", "8#====D~~~ ", "8#=====D ", "8#=====D~ ", "8#=====D~~ ", "8#=====D~~~ ", "8#======D ", "8#======D~ ", "8#======D~~ ", "8#======D~~~ ", "8#=======D ", "8#=======D~ ", "8#=======D~~ ", "8#=======D~~~ ", "8#========D ", "8#========D~ ", "8#========D~~ ", "8#========D~~~ ", "8#=========D ", "8#=========D~ ", "8#=========D~~ ", "8#=========D~~~ ", "8#==========D ", "8#==========D~ ", "8#==========D~~ ", "8#==========D~~~ ", "8#===========D ", "8#===========D~ ", "8#===========D~~ ", "8#===========D~~~ ", "8#============D ", "8#============D~ ", "8#============D~~ ", "8#============D~~~ ",
@@ -43,8 +44,13 @@ fn fast_rand_dick<'a>(cache: &'a mut String, count: &mut usize, rng: &mut Thread
 fn wipe(dev: &Path, rounds: usize, rng: &mut ThreadRng) -> io::Result<()> {
     let size = fs::metadata(dev).map(|m| m.len()).unwrap_or(0);
 
-    for _ in 0..rounds {
+    for round in 0..rounds {
         let mut file = OpenOptions::new().write(true).open(dev)?;
+
+        let progress_bar = ProgressBar::new(size);
+        progress_bar.set_style(ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+            .progress_chars("#>-"));
 
         if size == 0 {
             loop {
@@ -58,11 +64,13 @@ fn wipe(dev: &Path, rounds: usize, rng: &mut ThreadRng) -> io::Result<()> {
             while dlen < size {
                 let dick = rand_dick(rng);
                 dlen += dick.len() as u64;
+                progress_bar.inc(dick.len() as u64);
                 if file.write_all(dick.as_bytes()).is_err() {
                     break;
                 }
             }
         }
+        progress_bar.finish_with_message(&format!("Round {} completed", round + 1));
     }
 
     fs::remove_file(dev)?;
@@ -74,7 +82,7 @@ fn parse_dir(dir: &Path, recursive: bool) -> io::Result<Vec<PathBuf>> {
     let mut filelist = Vec::new();
 
     for entry in fs::read_dir(dir)? {
-        let entry = entry?; 
+        let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
             if recursive {
@@ -146,8 +154,8 @@ fn main() {
 
     let initial_file_list: Vec<PathBuf> = matches.get_many::<String>("files").unwrap().map(|s| PathBuf::from(s)).collect();
 
-    let file_list = parse_filelist(&initial_file_list, recursive).unwrap(); 
- 
+    let file_list = parse_filelist(&initial_file_list, recursive).unwrap();
+
     let file_list = if wipefree {
         let mut fl = file_list;
         fl.push(PathBuf::from("dick.tmp"));
@@ -160,7 +168,7 @@ fn main() {
 
     for f in file_list {
         let handle = thread::spawn(move || {
-            let mut rng = thread_rng(); // create new threads uwu 
+            let mut rng = thread_rng(); // create new threads uwu
             if let Err(e) = wipe(&f, numrounds, &mut rng) {
                 eprintln!("ERROR: {:?}: {:?}", f, e);
             }
