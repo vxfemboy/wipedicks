@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: ''
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            ext: ''
+            cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            ext: ''
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            ext: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: '.exe'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install cross-toolchain (Linux aarch64)
+        if: matrix.cross == true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Stage artifact
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXT: ${{ matrix.ext }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          BIN="target/${TARGET}/release/wipedicks${EXT}"
+          OUT="wipedicks-${REF_NAME}-${TARGET}"
+          mkdir -p "dist/${OUT}"
+          cp "${BIN}" "dist/${OUT}/"
+          cp readme.md "dist/${OUT}/"
+          cd dist
+          if [[ "${EXT}" == ".exe" ]]; then
+            7z a "${OUT}.zip" "${OUT}"
+          else
+            tar czf "${OUT}.tar.gz" "${OUT}"
+          fi
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
