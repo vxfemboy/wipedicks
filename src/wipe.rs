@@ -297,7 +297,9 @@ fn freespace_loop(
                     pb.inc(buf.as_bytes().len() as u64);
                 }
             }
-            Err(e) if e.raw_os_error() == Some(libc::ENOSPC) => break,
+            // ENOSPC on Unix / ERROR_DISK_FULL on Windows — std maps both to
+            // StorageFull, so we sidestep platform-specific errno crates.
+            Err(e) if e.kind() == std::io::ErrorKind::StorageFull => break,
             Err(e) => return Err(e).context("freespace write"),
         }
     }

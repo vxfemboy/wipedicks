@@ -16,6 +16,10 @@ use anyhow::{anyhow, Context, Result};
 /// What flavor of storage we're dealing with. Determines whether it can take
 /// a multi-pass railing or whether we should treat it like fine china.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// Windows `classify` always returns Unknown (TODO: native classification),
+// so Nvme/Sata/Rotational are never constructed there. Lint stays useful on
+// Linux + macOS where the real classification logic lives.
+#[cfg_attr(not(any(target_os = "linux", target_os = "macos")), allow(dead_code))]
 pub enum DriveKind {
     Nvme,
     Sata,       // SSD on SATA bus, rotational==0

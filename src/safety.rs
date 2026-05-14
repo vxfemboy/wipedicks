@@ -6,9 +6,16 @@
 //! ass-blast your filesystem just because you fat-fingered a path.
 
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+// PathBuf is only referenced by name in the Linux mountinfo/swaps parsers.
+#[cfg(target_os = "linux")]
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// On non-Linux platforms `is_swap` and `is_mounted_block_device` are no-op
+// fallbacks (no /proc/swaps, no /proc/self/mountinfo), so SwapFile and
+// MountedDevice are never constructed there. Keep the lint useful on Linux.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub enum Hazard {
     /// Path is, or is inside, a system directory we shouldn't touch.
     SystemPath,
