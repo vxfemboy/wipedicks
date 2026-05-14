@@ -151,7 +151,11 @@ pub fn explain(path: &Path, hazard: Hazard) {
     eprintln!();
 }
 
-#[cfg(test)]
+// The hardcoded `SYSTEM_PREFIXES` are all Unix paths, and `fs::canonicalize`
+// behaves wildly differently on Windows (it resolves `/` to the current
+// drive's root, e.g. `\\?\C:\`, which breaks the equality check). The
+// behavior these tests assert is fundamentally Linux-shaped — gate them.
+#[cfg(all(test, target_os = "linux"))]
 mod tests {
     use super::*;
 
