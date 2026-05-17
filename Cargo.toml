@@ -1,8 +1,24 @@
 [package]
 name = "wipedicks"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+description = "Wipe files and drives securely with random ASCII dicks"
+keywords = ["anti-forensics", "antiforensics", "forensics", "wipe", "ascii"]
+categories = ["command-line-utilities", "filesystem"]
+readme = "README.md"
+repository = "https://github.com/vxfemboy/wipedicks"
+license = "WTFPL+"
+
 
 [dependencies]
-rand = "0.8.5"
-clap = "4.5.9"
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+console = "0.15"
+ctrlc = "3.4"
+indicatif = "0.17"
+rand = { version = "0.8", features = ["small_rng"] }
+wide = "0.7"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
