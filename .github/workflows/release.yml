@@ -64,7 +64,7 @@ jobs:
           OUT="wipedicks-${REF_NAME}-${TARGET}"
           mkdir -p "dist/${OUT}"
           cp "${BIN}" "dist/${OUT}/"
-          cp readme.md "dist/${OUT}/"
+          cp README.md "dist/${OUT}/"
           cd dist
           if [[ "${EXT}" == ".exe" ]]; then
             7z a "${OUT}.zip" "${OUT}"
