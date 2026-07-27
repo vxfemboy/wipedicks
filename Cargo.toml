@@ -17,7 +17,7 @@ console = "0.15"
 ctrlc = "3.4"
 indicatif = "0.17"
 rand = { version = "0.8", features = ["small_rng"] }
-wide = "0.7"
+wide = "0.8"
 
 [profile.release]
 lto = "thin"
