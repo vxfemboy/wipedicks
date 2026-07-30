@@ -1,6 +1,6 @@
 # 8====D~ WipeDicks
 
-[![CI](https://github.com/vxfemboy/wipedicks/actions/workflows/ci.yml/badge.svg)](https://github.com/vxfemboy/wipedicks/actions/workflows/ci.yml)
+[![CI](https://virus.ad/vxfemboy/wipedicks/badges/workflows/ci.yml/badge.svg)](https://virus.ad/vxfemboy/wipedicks/actions)
 [![crates.io](https://img.shields.io/crates/v/wipedicks.svg)](https://crates.io/crates/wipedicks)
 
 *The only file shredder that finishes with a happy ending.*
